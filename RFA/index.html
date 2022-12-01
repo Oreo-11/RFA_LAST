@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <div class="post-list"></div>
+    <div>
+        <h2>Добавить пост</h2>
+        <input type="text" id="title" placeholder="Введите title"><br>
+        <input type="text" id="body" placeholder="Введите пароль"><br>
+        <button onclick="addPost()">Отправить</button>
+        
+    </div>
+    <h2>Редактирование Поста</h2>
+    <input type="text" id="titleObnov" placeholder="Введите title"><br>
+    <input type="text" id="bodyObnov" placeholder="Введите пароль"><br>
+    <button onclick="updatePost()">Обновить</button>
+
+    <script>
+
+        let idPost = null;
+
+async function getPosts() {
+    let res = await fetch('http://test/posts');
+    let posts = await res.json();
+
+    document.querySelector(".post-list").innerHTML = '';
+
+    posts.forEach((post) => {
+        document.querySelector(".post-list").innerHTML += `
+        <div>
+        <h1>${post.title}</h1>
+        <button onclick="deletePost('${post.id}')">Удалить</button>
+        <button onclick="selectPost('${post.id}', ${post.title}, '${post.body}')">Редактировать</button>
+        </div>`
+    })
+}
+
+
+
+function selectPost(id, title, body) {
+    idPost = id;
+    const titleEdit = document.getElementById('titleObnov').value = title;
+    const bodyTitle = document.getElementById('bodyObnov').value = body;
+}
+
+async function updatePost() {
+const titleUp = document.getElementById('titleObnov').value;
+const bodyUp = document.getElementById('bodyObnov').value;
+
+
+const data = {
+    title: titleUp,
+    body: bodyUp
+};
+
+const res = await fetch(`http://test/posts/${idPost}`, {
+    method: "PATCH",
+    body: JSON.stringify(data)
+});
+
+let resData = res.json();
+
+if(resData.status === true) {
+    await getPosts();
+}
+}
+
+
+
+
+async function addPost() {
+  let title = document.querySelector("#title").value;
+  let body = document.querySelector("#body").value;
+
+  let formData = new FormData();
+  formData.append('title', title);
+  formData.append('body', body);
+
+  const res = await fetch('http://test/posts', {method: 'POST', body: formData});
+
+  const data = await res.json();
+
+  if(data.status === true) {
+    await getPosts();
+  }
+}
+
+
+async function deletePost(id) {
+    const res = await fetch(`http://test/posts/${id}`, {method: 'DELETE'});
+
+    const data = await res.json();
+
+    if( data.status === true) {
+        await getPosts();
+    }
+}
+getPosts();
+    </script>
+</body>
+</html>
